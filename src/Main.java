@@ -1,17 +1,35 @@
+package com.example.task02;
+
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
+
+    private static class CallerRunsPolicy implements RejectedExecutionHandler {
+
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
+                try {
+                    e.getQueue().put(r);
+                } catch (Exception ignored) {
+
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) throws InterruptedException {
+
         // создаем пул для выполнения наших задач
         //   максимальное количество созданных задач - 3
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 // не изменяйте эти параметры
                 3, 3, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(3));
 
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
 
         // сколько задач выполнилось
         AtomicInteger count = new AtomicInteger(0);
@@ -39,6 +57,6 @@ public class Main {
                 return null;
             });
         }
-        executor.shutdown();
+        executor.shutdown(); //чтоб вечно не работал
     }
 }
